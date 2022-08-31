@@ -1,0 +1,73 @@
+Install MongoDB 6.0 Community Edition 
+----------------------------------------
+(I shared the Turkish version of my MongoDB Installation article on my linkedin profile, you can find it there: https://www.linkedin.com/pulse/centos-8-%C3%BCzerinde-mongodb-kurulumu-zekiye-aydemi%CC%87r/
+MongoDB is an open-source, document-based NoSQL database designed to efficiently process large amounts of data. It stores data as Binary JSON documents (BSON). Provides ACID support in MongoDB versions 4.0 and later.
+
+Some features commonly found in RDBMS systems are not available to make MongoDB high performance and fast. The table does not have the concepts of rows and columns. It has dynamic schema structure so documents can have different schemas which means the schema can change as the application evolves.
+
+A single MongoDB instance can host multiple databases. Every database is a set of collections. Collections are similar to the concept of tables in a relational database; however, these are schematics. There can be more than one document in a collection, we can think of the document as a row in a relational database.
+
+
+MongoDB Installation
+For installation, we create the /etc/yum.repos.d/mongodb-org-6.0.repo repo file with the vim command and add the following lines to the file, save and exit:
+
+vim /etc/yum.repos.d/mongodb-org-6.0.repo
+[mongodb-org-6.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/6.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc
+
+We install MongoDB's mongodb-org package:
+
+sudo yum install -y mongodb-org
+
+The mongodb-org package we installed is the sum of mongos, server, shell and tools packages.
+
+mongodb-org-server : Contains the mongod and the init command.
+
+mongodb-org-mongos : Contains the mongos.
+
+mongodb-org-shell : Contains the Mongo shell program.
+
+mongodb-org-tools : Contains Mongo commands; mongodump, mongorestore, mongoexport, mongoimport, mongostat, mongotop etc.
+
+We start mongod, the MongoDB service, and enable it to start automatically at server startup:
+
+systemctl start mongod
+systemctl enable mongod
+
+We can check the running of the mongod service as follows:
+
+systemctl status mongod
+
+By default, the MongoDB configuration file is /etc/mongod.conf. It works on port 27017 at 127.0.0.1 with default settings.
+We connect to the database with the mongo command:
+
+mongo
+
+We can view the available databases with the show dbs command:
+By default in MongoDB installation, it has admin, local and config databases.
+
+admin : It is the root database for administrative operations. If a user is added to the Admin database, the user automatically inherits the permissions of all databases. There are also some service-wide commands that can only be run from the admin database, such as listing all databases or shutting down the service.
+
+local : It is the database where the MongoDB service stores its information in replication processes and its unique information. It is also not copied during replication processes.
+
+config : It is the database where the shared cluster information is stored.
+
+By default, when MongoDB is installed, the authentication setting is set to disable. “WARNING: Access control is not enabled for the database.” This setting is the reason for the warning. After creating an authorized user in the database, we will not receive this warning when we activate the authentication setting in the default configuration file /etc/mongod.conf and restart the service.
+
+MongoDB recommends to disable Transparent HugePages for better performance. This setting is active by default on most Linux distributions. The example command output is "WARNING: /sys/kernel/mm/transparent_hugepage/enabled is 'always'." This setting is the reason we get the warning. We will change this setting as suggested after user creation in the database.
+
+MongoDB User Creation and Database Operations
+We create an authorized user in the entire cluster by connecting to the admin database with the following command:
+
+use admin
+db.createUser(
+  {
+    user: "zaydemir",
+    pwd: "mypassword",
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
+  }
+)
